@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Photo Gallery</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #000; color: white; text-align: center; }
+        .gallery-container, .folder-container { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
+        .gallery-item, .folder-item { position: relative; width: 150px; height: 150px; margin: 10px; overflow: hidden; border-radius: 10px; cursor: pointer; transition: transform 0.3s ease-in-out; }
+        .gallery-item:hover, .folder-item:hover { transform: scale(1.1); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+        .delete-btn, .fav-btn { position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; cursor: pointer; border-radius: 50%; }
+        .fav-btn { right: 30px; background: gold; }
+        .upload-box { margin: 20px; }
+        input { display: none; }
+        label { padding: 10px 20px; background: #007AFF; color: white; border-radius: 5px; cursor: pointer; }
+        .folder { text-align: center; cursor: pointer; margin: 10px; padding: 10px; background: gray; border-radius: 10px; transition: transform 0.3s ease-in-out; }
+        .folder:hover { transform: scale(1.1); }
+    </style>
+</head>
+<body>
+    <h1>My iPhone-Style Photo Gallery</h1>
+    <div class="upload-box">
+        <input type="file" id="fileInput" accept="image/*" multiple>
+        <label for="fileInput">Upload Photos</label>
+    </div>
+    <div class="folder-container" id="folders"></div>
+    <div class="gallery-container" id="gallery"></div>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const storage = firebase.storage();
+
+        function uploadFile(file, folderName) {
+            const storageRef = storage.ref(`${folderName}/${file.name}`);
+            storageRef.put(file).then(snapshot => {
+                storageRef.getDownloadURL().then(url => {
+                    addPhoto(url, folderName);
+                });
+            });
+        }
+
+        function addPhoto(src, folderName) {
+            const gallery = document.getElementById('gallery');
+            const div = document.createElement('div');
+            div.classList.add('gallery-item');
+            div.innerHTML = `<img src="${src}">
+                <button class='fav-btn' onclick='addToFavorites("${src}")'>&#10084;</button>
+                <button class='delete-btn' onclick='deletePhoto("${src}", "${folderName}")'>X</button>`;
+            gallery.appendChild(div);
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const selectedFolder = prompt("Enter folder name to save the photos:");
+            if (!selectedFolder) return;
+            Array.from(event.target.files).forEach(file => uploadFile(file, selectedFolder));
+        });
+    </script>
+</body>
+</html>
